@@ -61,7 +61,7 @@ def embed_onehot(dictionary, data):
 
 def initial_embed(dic, path):
     embeddings_index = {}
-    f = open(os.path.join(path, 'glove.6B.200d.txt'))
+    f = open(os.path.join(path, 'glove.6B.200d.txt'), encoding="utf8")
     for line in f:
         values = line.split()
         word = values[0]

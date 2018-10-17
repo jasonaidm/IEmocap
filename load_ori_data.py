@@ -7,13 +7,13 @@ import string
 import scipy.io as scio
 import os
 
-dic_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/dictionary.txt'
+dic_path = r'E:/Yue/Entire Data/ACL_2018/dictionary.txt'
 label_category = ['ang', 'exc', 'sad', 'fru', 'hap', 'neu']
-label_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/label_output.txt'
-audio_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/Audio Mat Norm_2/'
-hier_audio_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/Word Mat Norm_2/'
-text_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/text_output.txt'
-embed_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/'
+label_path = r'E:/Yue/Entire Data/ACL_2018/label_output.txt'
+audio_path = r'E:/Yue/Entire Data/IEMOCAP/New_Channel_1_Nor/'
+#hier_audio_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/Word Mat Norm_2/'
+text_path = r'E:/Yue/Entire Data/ACL_2018/text_output.txt'
+embed_path = r'E:/Yue/Entire Data/ACL_2018/'
 maxlen = 50
 numclass = 4
 
@@ -75,7 +75,7 @@ def get_text_data(path, dic):
     res = []
     i = 0
     for line in f:
-        text = embed_onehot(dic, line.translate(None, string.punctuation))
+        text = embed_onehot(dic, line.translate(str.maketrans('', '',string.punctuation)))
         res.append(text)
         i += 1
     f.close()
@@ -228,7 +228,7 @@ def process_train_data(train_audio, train_text, train_label):
     train_text = sequence.pad_sequences(train_text, maxlen=50)
     return train_audio, train_text, train_label
 
-
+"""
 def get_data():
     dic = get_dictionary(dic_path)
     embed_matrix = initial_embed(dic, embed_path)
@@ -241,9 +241,9 @@ def get_data():
     test_label = to_categorical(test_label_o, num_classes=numclass)
     test_text_data = sequence.pad_sequences(test_text_data, maxlen=maxlen)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
+
+
 """
-
-
 def get_data():
     dic = get_dictionary(dic_path)
     embed_matrix = initial_embed(dic, embed_path)
@@ -256,3 +256,4 @@ def get_data():
     test_label = to_categorical(test_label_o, num_classes=numclass)
     test_text_data = sequence.pad_sequences(test_text_data, maxlen=maxlen)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
+"""
