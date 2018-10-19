@@ -15,10 +15,10 @@ audio_path = r'E:/Yue/Entire Data/IEMOCAP/New_Channel_1_Nor/'
 text_path = r'E:/Yue/Entire Data/ACL_2018/text_output.txt'
 embed_path = r'E:/Yue/Entire Data/ACL_2018/'
 maxlen = 50
-numclass = 4
+numclass = 4#3
 
 
-def get_label(path):
+def get_label(path):# numclass = 3
     f = open(path, 'r')
     statistic = {'ang': 0, 'exc': 0, 'sad': 0, 'fru': 0, 'hap': 0, 'neu': 0}
     res = []
@@ -40,7 +40,7 @@ def get_label(path):
             res.append(1)
         elif line.split()[0] == label_category[5]:
             statistic[label_category[5]] += 1
-            res.append(3)
+            res.append(3)# append(4)
     print(statistic)
     return res
 
@@ -117,14 +117,14 @@ def seperate_hier_dataset(audio_data, text_data, label):
 
 
 
-def analyze_data(test_label, result):
+def analyze_data(test_label, result):#numcalss = 4
     r_0 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     r_1 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     r_2 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     r_3 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     r_4 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     i = 0
-    while i < len(test_label):
+    while i < len(test_label):#4
         if test_label[i] == 0:
             r_0[str(result[i])] += 1
         elif test_label[i] == 1:
@@ -236,9 +236,9 @@ def get_data():
     audio_data = get_mat_data(audio_path)
     text_data = get_text_data(text_path, dic)
     train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label_o = seperate_dataset(audio_data, text_data, label)
-    train_label = to_categorical(train_label, num_classes=numclass)
-    train_text_data = sequence.pad_sequences(train_text_data, maxlen=maxlen)
-    test_label = to_categorical(test_label_o, num_classes=numclass)
+    train_label = to_categorical(train_label, num_classes=numclass)#将类别向量(从0到nb_classes的整数向量)映射为二值类别矩阵, 用于应用到以categorical_crossentropy为目标函数的模型中.
+    train_text_data = sequence.pad_sequences(train_text_data, maxlen=maxlen)# to 2D numpy array
+    test_label = to_categorical(test_label_o, num_classes=numclass)#3
     test_text_data = sequence.pad_sequences(test_text_data, maxlen=maxlen)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
 

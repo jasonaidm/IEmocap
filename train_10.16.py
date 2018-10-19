@@ -70,7 +70,7 @@ audio_f_input = Input(shape=(256, ))
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 d_1 = Dense(256)(merge)
 batch_nol1 = BatchNormalization()(d_1)
-activation1 = Activation('relu')(batch_nol1)
+activation1 = Activation('relu')(batch_nol1)#线性修正单元激活：如果 x > 0，返回值为 x；如果 x < 0，返回值为 alpha * x。如果定义了 max_value，则结果将截断为此值。
 d_drop1 = Dropout(0.25)(activation1)
 d_2 = Dense(128)(d_drop1)
 batch_nol2 = BatchNormalization()(d_2)
