@@ -11,3 +11,29 @@ seperate_dataset
 
 label：
 to_categorical（将类向量（整数）转换为二进制类矩阵。）->seperate_dataset
+
+
+structure:
+train
+
+
+
+datasets:
+text:
+text_output_new 7204 sentenses
+
+
+audio:
+max 64*2219
+colomn: length
+line: 64 windos size
+
+label:
+label_output_new 7204 emotions(6 kinds)
+
+emben word2vector:
+glove.6B.50d
+initial_embed具体看一下
+
+dictionary:
+text转词典
