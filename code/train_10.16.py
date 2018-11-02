@@ -1,7 +1,10 @@
 from __future__ import print_function
+
+from keras_test import Attention
 from load_ori_data import get_data, analyze_data, train_data_generation  #process_train_data
 from keras.models import Model
-from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate
+from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
+    GlobalAveragePooling1D
 from keras.layers import BatchNormalization, Activation
 from keras.optimizers import Adam
 from attention_model import AttentionLayer
@@ -47,7 +50,7 @@ inter_audio_model = Model(inputs=audio_input, outputs=audio_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-
+'''
 # Text Branch
 text_input = Input(shape=(50,))
 em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
@@ -55,6 +58,26 @@ mask_text_input = Masking(mask_value=0.)(em_text)
 text_l1 = Bidirectional(LSTM(128, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
 text_att = AttentionLayer()(text_l1)
 dropout_text = Dropout(0.5)(text_att)
+
+text_prediction = Dense(5, activation='softmax')(dropout_text)
+text_model = Model(inputs=text_input, outputs=text_prediction)
+inter_text_model = Model(inputs=text_input, outputs=text_att)
+
+adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+'''
+
+# Text Branch
+text_input = Input(shape=(50,))
+em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
+#mask_text_input = Masking(mask_value=0.)(em_text)
+#text_l1 = Bidirectional(LSTM(128, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
+#text_att = AttentionLayer()(text_l1)
+text_att = Attention(10,20)([em_text,em_text,em_text])
+text_att = GlobalAveragePooling1D()(text_att)
+dropout_text = Dropout(0.5)(text_att)
+#outputs = Dense(1, activation='sigmoid')(text_att)
+
 
 text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
@@ -110,7 +133,7 @@ for i in range(25):
         train_text_inter = inter_text_model.predict(train_text_data, batch_size=batch_size)
         test_text_inter = inter_text_model.predict(test_text_data, batch_size=batch_size)
 
-
+'''
 audio_acc = 0
 for i in range(50):
     print('audio branch, epoch: ', str(i))
@@ -134,15 +157,16 @@ for i in range(epo):
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         result = np.argmax(result, axis=1)
-
-r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
+'''
+#r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
 print('final result: ')
-print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
-print(r_0)
-print(r_1)
-print(r_2)
-print(r_3)
-print(r_4)
+print('text acc',text_acc)
+#print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
+#print(r_0)
+#print(r_1)
+#print(r_2)
+#print(r_3)
+#print(r_4)
 
 
 """
