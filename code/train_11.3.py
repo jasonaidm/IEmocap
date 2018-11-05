@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from keras_test import Attention
+from self_attention import Attention
 from load_ori_data import get_data, analyze_data, train_data_generation  #process_train_data
 from keras.models import Model
 from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
@@ -35,7 +35,7 @@ print('test_text shape:', test_text_data.shape)
 print('train_label shape:', final_train_label.shape)
 print('test_label shape:', test_label.shape)
 """
-
+'''
 # Audio branch
 audio_input = Input(shape=(2250, 64))
 mask_audio_input = Masking(mask_value=0.)(audio_input)
@@ -49,6 +49,7 @@ inter_audio_model = Model(inputs=audio_input, outputs=audio_att)
 
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+'''
 
 '''
 # Text Branch
@@ -70,23 +71,16 @@ text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['ac
 # Text Branch
 text_input = Input(shape=(50,))
 em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
-#mask_text_input = Masking(mask_value=0.)(em_text)
-#text_l1 = Bidirectional(LSTM(128, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
-#text_att = AttentionLayer()(text_l1)
 text_att = Attention(10,20)([em_text,em_text,em_text])
 text_att = GlobalAveragePooling1D()(text_att)
 dropout_text = Dropout(0.5)(text_att)
-#outputs = Dense(1, activation='sigmoid')(text_att)
-
-
 text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
 inter_text_model = Model(inputs=text_input, outputs=text_att)
-
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-
+'''
 # Fusion Model
 text_f_input = Input(shape=(256,))
 audio_f_input = Input(shape=(256, ))
@@ -103,6 +97,7 @@ f_prediction = Dense(5, activation='softmax')(d_drop2)
 final_model = Model(inputs=[text_f_input, audio_f_input], outputs=f_prediction)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+'''
 
 """
 # Merge Layer
@@ -159,7 +154,7 @@ for i in range(epo):
         result = np.argmax(result, axis=1)
 '''
 #r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
-print('final result: ')
+#print('final result: ')
 print('text acc',text_acc)
 #print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
 #print(r_0)
