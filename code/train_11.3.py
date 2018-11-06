@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from self_attention import Attention
+from self_attention import Attention, Position_Embedding
 from load_ori_data import get_data, analyze_data, train_data_generation  #process_train_data
 from keras.models import Model
 from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
@@ -71,6 +71,7 @@ text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['ac
 # Text Branch
 text_input = Input(shape=(50,))
 em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
+em_text = Position_Embedding()(em_text)
 text_att = Attention(10,20)([em_text,em_text,em_text])
 text_att = GlobalAveragePooling1D()(text_att)
 dropout_text = Dropout(0.5)(text_att)
