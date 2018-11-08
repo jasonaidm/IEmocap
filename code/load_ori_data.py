@@ -127,46 +127,42 @@ def seperate_dataset(audio_data, text_data, label):
     train_label, test_label = [], []
     ang_text, hap_exc_text, neu_sad_text, fru_text = seprate_by_emotion(text_data)
     ang_audio, hap_exc_audio, neu_sad_audio, fru_audio = seprate_by_emotion(audio_data)
-
+    ang_label, hap_exc_label, neu_sad_label, fru_label = seprate_by_emotion(label)
     ang_i = 0
     while ang_i < len(ang_audio):
-        # ang data
         if random.randint(0, 100) < 80:
             train_text_data.append(ang_text[ang_i])
             train_audio_data.append(ang_audio[ang_i])
-            train_label.append(label[ang_i])
+            train_label.append(ang_label[ang_i])
         else:
             test_text_data.append(ang_text[ang_i])
             test_audio_data.append(ang_audio[ang_i])
-            test_label.append(label[ang_i])
+            test_label.append(ang_label[ang_i])
         ang_i += 1
 
     hap_exc_i = 0
     while hap_exc_i < len(hap_exc_audio):
-        # ang data
         if random.randint(0, 100) < 80:
             train_text_data.append(hap_exc_text[hap_exc_i])
             train_audio_data.append(hap_exc_audio[hap_exc_i])
-            train_label.append(label[ang_i+hap_exc_i])
-
+            train_label.append(hap_exc_label[hap_exc_i])
         else:
             test_text_data.append(hap_exc_text[hap_exc_i])
             test_audio_data.append(hap_exc_audio[hap_exc_i])
-            test_label.append(label[ang_i+hap_exc_i])
+            test_label.append(hap_exc_label[hap_exc_i])
         hap_exc_i += 1
 
     neu_sad_i = 0
     while neu_sad_i < len(neu_sad_audio):
-        # ang data
         if random.randint(0, 100) < 80:
             train_text_data.append(neu_sad_text[neu_sad_i])
             train_audio_data.append(neu_sad_audio[neu_sad_i])
-            train_label.append(label[ang_i+hap_exc_i+neu_sad_i])
+            train_label.append(neu_sad_label[neu_sad_i])
 
         else:
             test_text_data.append(neu_sad_text[neu_sad_i])
             test_audio_data.append(neu_sad_audio[neu_sad_i])
-            test_label.append(label[ang_i+hap_exc_i+neu_sad_i])
+            test_label.append(neu_sad_label[neu_sad_i])
         neu_sad_i += 1
 
     fru_i = 0
@@ -175,12 +171,12 @@ def seperate_dataset(audio_data, text_data, label):
         if random.randint(0, 100) < 80:
             train_text_data.append(fru_text[fru_i])
             train_audio_data.append(fru_audio[fru_i])
-            train_label.append(label[ang_i+hap_exc_i+neu_sad_i+fru_i])
+            train_label.append(fru_label[fru_i])
 
         else:
             test_text_data.append(fru_text[fru_i])
             test_audio_data.append(fru_audio[fru_i])
-            test_label.append(label[ang_i+hap_exc_i+neu_sad_i+fru_i])
+            test_label.append(fru_label[fru_i])
         fru_i += 1
 
     return np.array(train_audio_data), train_text_data, train_label, np.array(
