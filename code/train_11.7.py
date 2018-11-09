@@ -51,22 +51,7 @@ text_model = Model(inputs=text_input, outputs=text_prediction)
 inter_text_model = Model(inputs=text_input, outputs=text_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-'''
-# Merge Layer
-merge = concatenate([audio_att, text_att], name='merge')
-dropout_l1 = Dropout(0.5)(merge)
 
-final_prediction = Dense(4, activation='softmax')(dropout_l1)
-final_model = Model(inputs=[audio_input, text_input], outputs=final_prediction)
-
-adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-final_model.summary()
-
-print('Train...')
-#result = final_model.fit([train_audio_data, train_text_data], train_label, batch_size=batch_size, epochs=15, validation_data=([test_audio_data, test_text_data], test_label), verbose=1)
-#print(result.history)
-'''
 # Fusion Model
 text_f_input = Input(shape=(200,))
 audio_f_input = Input(shape=(64, ))
