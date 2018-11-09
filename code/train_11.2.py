@@ -42,11 +42,9 @@ mask_audio_input = Masking(mask_value=0.)(audio_input)
 audio_l1 = Bidirectional(LSTM(128, return_sequences=True, recurrent_dropout=0.25, name='LSTM_audio'))(mask_audio_input)
 audio_att = AttentionLayer()(audio_l1)
 dropout_audio = Dropout(0.5)(audio_att)
-
 audio_prediction = Dense(5, activation='softmax')(dropout_audio)
 audio_model = Model(inputs=audio_input, outputs=audio_prediction)
 inter_audio_model = Model(inputs=audio_input, outputs=audio_att)
-
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 '''
@@ -59,13 +57,12 @@ mask_text_input = Masking(mask_value=0.)(em_text)
 text_l1 = Bidirectional(LSTM(128, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
 text_att = AttentionLayer()(text_l1)
 dropout_text = Dropout(0.5)(text_att)
-
 text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
 inter_text_model = Model(inputs=text_input, outputs=text_att)
-
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+'''
 '''
 # Audio branch
 audio_input = Input(shape=(2250, 64))
@@ -80,7 +77,7 @@ audio_model = Model(inputs=audio_input, outputs=audio_prediction)
 inter_audio_model = Model(inputs=audio_input, outputs=audio_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-
+'''
 # Text Branch
 text_input = Input(shape=(50,))
 em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
@@ -88,13 +85,14 @@ em_text = Position_Embedding()(em_text)
 text_att = Attention(10,20)([em_text,em_text,em_text])
 text_att = GlobalAveragePooling1D()(text_att)
 dropout_text = Dropout(0.5)(text_att)
-text_prediction = Dense(5, activation='softmax')(dropout_text)
+#text_prediction = Dense(5, activation='softmax')(dropout_text)
+text_prediction = Dense(4, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
 inter_text_model = Model(inputs=text_input, outputs=text_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-
+'''
 # Fusion Model
 text_f_input = Input(shape=(256,))
 audio_f_input = Input(shape=(256, ))
@@ -111,9 +109,8 @@ f_prediction = Dense(5, activation='softmax')(d_drop2)
 final_model = Model(inputs=[text_f_input, audio_f_input], outputs=f_prediction)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-
-
-
+'''
+'''
 # Merge Layer
 merge = concatenate([audio_att, text_att], name='merge')
 dropout_l1 = Dropout(0.5)(merge)
@@ -128,7 +125,7 @@ final_model.summary()
 print('Train...')
 #result = final_model.fit([train_audio_data, train_text_data], train_label, batch_size=batch_size, epochs=15, validation_data=([test_audio_data, test_text_data], test_label), verbose=1)
 #print(result.history)
-
+'''
 text_acc = 0
 for i in range(25):
     print('text branch, epoch: ', str(i))
@@ -140,7 +137,7 @@ for i in range(25):
         text_acc = acc_t
         train_text_inter = inter_text_model.predict(train_text_data, batch_size=batch_size)
         test_text_inter = inter_text_model.predict(test_text_data, batch_size=batch_size)
-
+'''
 audio_acc = 0
 for i in range(50):
     print('audio branch, epoch: ', str(i))
@@ -152,7 +149,8 @@ for i in range(50):
         audio_acc = acc_a
         train_audio_inter = inter_audio_model.predict(train_audio_data, batch_size=batch_size)
         test_audio_inter = inter_audio_model.predict(test_audio_data, batch_size=batch_size)
-
+'''
+'''
 final_acc = 0
 for i in range(epo):
     print('fusion branch, epoch: ', str(i))
@@ -164,15 +162,17 @@ for i in range(epo):
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         result = np.argmax(result, axis=1)
+'''
 
-r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
+#r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
 print('final result: ')
-print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
-print(r_0)
-print(r_1)
-print(r_2)
-print(r_3)
-print(r_4)
+#print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
+print('text acc: ', text_acc,)
+#print(r_0)
+#print(r_1)
+#print(r_2)
+#print(r_3)
+#print(r_4)
 
 
 """
@@ -199,8 +199,6 @@ for i in range(100):
         audio_acc = acc_a
         train_audio_inter = inter_audio_model.predict(final_train_audio, batch_size=batch_size)
         test_audio_inter = inter_audio_model.predict(test_audio_data, batch_size=batch_size)
-
-
 final_acc = 0
 for i in range(epo):
     print('fusion branch, epoch: ', str(i))
@@ -212,7 +210,6 @@ for i in range(epo):
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         result = np.argmax(result, axis=1)
-
 r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
 print('final result: ')
 print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)

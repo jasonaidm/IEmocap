@@ -1,7 +1,10 @@
 from __future__ import print_function
-from load_data import get_data, analyze_data, train_data_generation  #process_train_data
+
+from self_attention import Attention
+from load_ori_data import get_data, analyze_data, train_data_generation  #process_train_data
 from keras.models import Model
-from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate
+from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
+    GlobalAveragePooling1D
 from keras.layers import BatchNormalization, Activation
 from keras.optimizers import Adam
 from attention_model import AttentionLayer
@@ -70,7 +73,7 @@ audio_f_input = Input(shape=(256, ))
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 d_1 = Dense(256)(merge)
 batch_nol1 = BatchNormalization()(d_1)
-activation1 = Activation('relu')(batch_nol1)
+activation1 = Activation('relu')(batch_nol1)#线性修正单元激活：如果 x > 0，返回值为 x；如果 x < 0，返回值为 alpha * x。如果定义了 max_value，则结果将截断为此值。
 d_drop1 = Dropout(0.25)(activation1)
 d_2 = Dense(128)(d_drop1)
 batch_nol2 = BatchNormalization()(d_2)
@@ -81,7 +84,7 @@ final_model = Model(inputs=[text_f_input, audio_f_input], outputs=f_prediction)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
-"""
+
 # Merge Layer
 merge = concatenate([audio_att, text_att], name='merge')
 dropout_l1 = Dropout(0.5)(merge)
@@ -96,7 +99,7 @@ final_model.summary()
 print('Train...')
 #result = final_model.fit([train_audio_data, train_text_data], train_label, batch_size=batch_size, epochs=15, validation_data=([test_audio_data, test_text_data], test_label), verbose=1)
 #print(result.history)
-"""
+
 
 text_acc = 0
 for i in range(25):
@@ -137,6 +140,7 @@ for i in range(epo):
 
 r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
 print('final result: ')
+print('text acc',text_acc)
 print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
 print(r_0)
 print(r_1)

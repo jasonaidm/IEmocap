@@ -9,10 +9,10 @@ import os
 
 dic_path = r'E:/Yue/Entire Data/ACL_2018/dictionary.txt'
 label_category = ['ang', 'exc', 'sad', 'fru', 'hap', 'neu']
-label_path = r'E:/Yue/Entire Data/ACL_2018/label_output.txt'
+label_path = r'E:/Yue/Entire Data/ACL_2018/label_output_new.txt'
 audio_path = r'E:/Yue/Entire Data/IEMOCAP/New_Channel_1_Nor/'
 # hier_audio_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018/Word Mat Norm_2/'
-text_path = r'E:/Yue/Entire Data/ACL_2018/text_output.txt'
+text_path = r'E:/Yue/Entire Data/ACL_2018/text_output_new.txt'
 embed_path = r'E:/Yue/Entire Data/ACL_2018/'
 maxlen = 50
 numclass = 4  # 3
@@ -125,9 +125,9 @@ def seperate_dataset(audio_data, text_data, label):
 def seperate_dataset(audio_data, text_data, label):
     train_text_data, train_audio_data, test_text_data, test_audio_data = [], [], [], []
     train_label, test_label = [], []
-    ang_text, hap_exc_text, neu_sad_text, fru_text = seprate_by_emotion(text_data)
-    ang_audio, hap_exc_audio, neu_sad_audio, fru_audio = seprate_by_emotion(audio_data)
-    ang_label, hap_exc_label, neu_sad_label, fru_label = seprate_by_emotion(label)
+    ang_text, hap_exc_text, neu_sad_text, fru_text = seprate_by_emotion(label_path,text_data)
+    ang_audio, hap_exc_audio, neu_sad_audio, fru_audio = seprate_by_emotion(label_path,audio_data)
+    ang_label, hap_exc_label, neu_sad_label, fru_label = seprate_by_emotion(label_path,label)
     ang_i = 0
     while ang_i < len(ang_audio):
         if random.randint(0, 100) < 80:
@@ -181,8 +181,6 @@ def seperate_dataset(audio_data, text_data, label):
 
     return np.array(train_audio_data), train_text_data, train_label, np.array(
         test_audio_data), test_text_data, test_label
-
-
 def seperate_hier_dataset(audio_data, text_data, label):
     train_text_data, train_audio_data, test_text_data, test_audio_data = [], [], [], []
     train_label, test_label = [], []
@@ -201,11 +199,11 @@ def seperate_hier_dataset(audio_data, text_data, label):
 
 
 def analyze_data(test_label, result):  # numcalss = 4
-    r_0 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
-    r_1 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
-    r_2 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
-    r_3 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
-    r_4 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
+    r_0 = {'0': 0, '1': 0, '2': 0, '3': 0}
+    r_1 = {'0': 0, '1': 0, '2': 0, '3': 0}
+    r_2 = {'0': 0, '1': 0, '2': 0, '3': 0}
+    r_3 = {'0': 0, '1': 0, '2': 0, '3': 0}
+
     i = 0
     while i < len(test_label):  # 4
         if test_label[i] == 0:
@@ -216,10 +214,9 @@ def analyze_data(test_label, result):  # numcalss = 4
             r_2[str(result[i])] += 1
         elif test_label[i] == 3:
             r_3[str(result[i])] += 1
-        elif test_label[i] == 4:
-            r_4[str(result[i])] += 1
+
         i += 1
-    return r_0, r_1, r_2, r_3, r_4
+    return r_0, r_1, r_2, r_3
 
 
 def train_data_generation(audio_data, text_data, label):
@@ -278,7 +275,6 @@ def data_generator_output(path, audio_data, audio_label, num):
 
 
 """
-
 def data_generator(path, audio_data, audio_label, num):
     i = 0
     while 1:
@@ -293,8 +289,6 @@ def data_generator(path, audio_data, audio_label, num):
         res_label.append(audio_label[i])
         i += 1
         yield (np.array(res), np.array(res_label))
-
-
 def get_data():
     dic = get_dictionary(dic_path)
     embed_matrix = initial_embed(dic, embed_path)
@@ -305,13 +299,10 @@ def get_data():
     test_label = to_categorical(test_label_o, num_classes=4)
     test_text_data = sequence.pad_sequences(test_text_data, maxlen=50)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
-
-
 def process_train_data(train_audio, train_text, train_label):
     train_label = to_categorical(train_label, num_classes=4)
     train_text = sequence.pad_sequences(train_text, maxlen=50)
     return train_audio, train_text, train_label
-
 """
 
 

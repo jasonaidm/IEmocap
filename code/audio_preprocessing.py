@@ -4,7 +4,7 @@ import os
 from keras.preprocessing import sequence
 from sklearn import preprocessing
 
-audio_path = '/media/yue/2e423a78-12f5-4de2-b748-381c1cede85f/ACL_2018/MOSI/Word_Mat_01_original/'#数据找一下
+audio_path = '/media/yue/2e423a78-12f5-4de2-b748-381c1cede85f/ACL_2018/MOSI/Word_Mat_01_original/'
 output_path = '/media/yue/2e423a78-12f5-4de2-b748-381c1cede85f/ACL_2018/MOSI/Word_Mat_Processed/'
 
 num = 2199
@@ -18,7 +18,7 @@ def get_mat_data(path):
         for file in files:
             tmp = scio.loadmat(path + str(i) + '/' + file)
             tmp = tmp['z1']
-            tmp = sequence.pad_sequences(tmp, padding='post', truncating='post', dtype='float32', maxlen=535)#一维转二维
+            tmp = sequence.pad_sequences(tmp, padding='post', truncating='post', dtype='float32', maxlen=535)
             # print(tmp.shape)
             tmp = tmp.transpose()
             sent.append(tmp)
