@@ -20,6 +20,7 @@ numclass = 4  # 3
 
 def get_label(path):  # numclass = 3
     f = open(path, 'r')
+    #             0         1         2         3         1         3
     statistic = {'ang': 0, 'exc': 0, 'sad': 0, 'fru': 0, 'hap': 0, 'neu': 0}
     res = []
     for line in f:
@@ -86,8 +87,8 @@ def seprate_by_emotion(path, data):
     f = open(path, 'r')
     ang = []
     hap_exc = []
-    neu_sad = []
-    fru = []
+    sad = []
+    fru_neu = []
     i = 0
     for line in f:
         if line.split()[0] == label_category[0]:
@@ -95,15 +96,15 @@ def seprate_by_emotion(path, data):
         elif line.split()[0] == label_category[1]:
             hap_exc.append(data[i])
         elif line.split()[0] == label_category[2]:
-            neu_sad.append(data[i])
+            sad.append(data[i])
         elif line.split()[0] == label_category[3]:
-            fru.append(data[i])
+            fru_neu.append(data[i])
         elif line.split()[0] == label_category[4]:
             hap_exc.append(data[i])
         elif line.split()[0] == label_category[5]:
-            neu_sad.append(data[i])  # append(4)
+            fru_neu.append(data[i])  # append(4)
         i += 1
-    return ang, hap_exc, neu_sad, fru
+    return ang, hap_exc, sad, fru_neu
 
 '''
 def seperate_dataset(audio_data, text_data, label):
@@ -122,12 +123,12 @@ def seperate_dataset(audio_data, text_data, label):
         i += 1
     return np.array(train_audio_data), train_text_data, train_label, np.array(test_audio_data), test_text_data, test_label
 '''
-def seperate_dataset(audio_data, text_data, label):
+def seperate_dataset(audio_data, text_data, label):# 名字改一下
     train_text_data, train_audio_data, test_text_data, test_audio_data = [], [], [], []
     train_label, test_label = [], []
-    ang_text, hap_exc_text, neu_sad_text, fru_text = seprate_by_emotion(label_path,text_data)
-    ang_audio, hap_exc_audio, neu_sad_audio, fru_audio = seprate_by_emotion(label_path,audio_data)
-    ang_label, hap_exc_label, neu_sad_label, fru_label = seprate_by_emotion(label_path,label)
+    ang_text, hap_exc_text, sad_text, fru_neu_text = seprate_by_emotion(label_path, text_data)
+    ang_audio, hap_exc_audio, sad_audio, fru_neu_audio = seprate_by_emotion(label_path, audio_data)
+    ang_label, hap_exc_label, sad_label, fru_neu_label = seprate_by_emotion(label_path, label)
     ang_i = 0
     while ang_i < len(ang_audio):
         if random.randint(0, 100) < 80:
@@ -152,32 +153,32 @@ def seperate_dataset(audio_data, text_data, label):
             test_label.append(hap_exc_label[hap_exc_i])
         hap_exc_i += 1
 
-    neu_sad_i = 0
-    while neu_sad_i < len(neu_sad_audio):
+    sad_i = 0
+    while sad_i < len(sad_audio):
         if random.randint(0, 100) < 80:
-            train_text_data.append(neu_sad_text[neu_sad_i])
-            train_audio_data.append(neu_sad_audio[neu_sad_i])
-            train_label.append(neu_sad_label[neu_sad_i])
+            train_text_data.append(sad_text[sad_i])
+            train_audio_data.append(sad_audio[sad_i])
+            train_label.append(sad_label[sad_i])
 
         else:
-            test_text_data.append(neu_sad_text[neu_sad_i])
-            test_audio_data.append(neu_sad_audio[neu_sad_i])
-            test_label.append(neu_sad_label[neu_sad_i])
-        neu_sad_i += 1
+            test_text_data.append(sad_text[sad_i])
+            test_audio_data.append(sad_audio[sad_i])
+            test_label.append(sad_label[sad_i])
+        sad_i += 1
 
-    fru_i = 0
-    while fru_i < len(fru_audio):
+    fru_neu_i = 0
+    while fru_neu_i < len(fru_neu_audio):
         # ang data
         if random.randint(0, 100) < 80:
-            train_text_data.append(fru_text[fru_i])
-            train_audio_data.append(fru_audio[fru_i])
-            train_label.append(fru_label[fru_i])
+            train_text_data.append(fru_neu_text[fru_neu_i])
+            train_audio_data.append(fru_neu_audio[fru_neu_i])
+            train_label.append(fru_neu_label[fru_neu_i])
 
         else:
-            test_text_data.append(fru_text[fru_i])
-            test_audio_data.append(fru_audio[fru_i])
-            test_label.append(fru_label[fru_i])
-        fru_i += 1
+            test_text_data.append(fru_neu_text[fru_neu_i])
+            test_audio_data.append(fru_neu_audio[fru_neu_i])
+            test_label.append(fru_neu_label[fru_neu_i])
+        fru_neu_i += 1
 
     return np.array(train_audio_data), train_text_data, train_label, np.array(
         test_audio_data), test_text_data, test_label
