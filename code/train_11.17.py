@@ -33,7 +33,7 @@ audio_att = Attention(4,16)([audio_input,audio_input,audio_input])
 audio_att = GlobalAveragePooling1D()(audio_att)
 #audio_att = AttentionLayer()(audio_l1)
 dropout_audio = Dropout(0.5)(audio_att)
-audio_prediction = Dense(4, activation='softmax')(dropout_audio)
+audio_prediction = Dense(5, activation='softmax')(dropout_audio)
 audio_model = Model(inputs=audio_input, outputs=audio_prediction)
 inter_audio_model = Model(inputs=audio_input, outputs=audio_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -46,7 +46,7 @@ em_text = Position_Embedding()(em_text)
 text_att = Attention(10,20)([em_text,em_text,em_text])#######可能有问题
 text_att = GlobalAveragePooling1D()(text_att)
 dropout_text = Dropout(0.5)(text_att)
-text_prediction = Dense(4, activation='softmax')(dropout_text)
+text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
 inter_text_model = Model(inputs=text_input, outputs=text_att)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
@@ -64,7 +64,7 @@ d_2 = Dense(64)(d_drop1)
 batch_nol2 = BatchNormalization()(d_2)
 activation2 = Activation('relu')(batch_nol2)
 d_drop2 = Dropout(0.5)(activation2)
-f_prediction = Dense(4, activation='softmax')(d_drop2)
+f_prediction = Dense(5, activation='softmax')(d_drop2)
 final_model = Model(inputs=[text_f_input, audio_f_input], outputs=f_prediction)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
@@ -100,7 +100,7 @@ for i in range(50):
 
 final_acc = 0
 result = None
-for i in range(50):
+for i in range(100):
     print('fusion branch, epoch: ', str(i))
     final_model.fit([train_text_inter, train_audio_inter], train_label, batch_size=batch_size, epochs=1)
     loss_f, acc_f = final_model.evaluate([test_text_inter, test_audio_inter], test_label, batch_size=batch_size, verbose=0)
@@ -111,11 +111,11 @@ for i in range(50):
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         result = np.argmax(result, axis=1)
 
-r_0, r_1, r_2, r_3 = analyze_data(test_label_o, result)
+r_0, r_1, r_2, r_3, r_4 = analyze_data(test_label_o, result)
 print('final result: ')
 print('text acc: ', text_acc, ' audio acc: ', audio_acc, ' final acc: ', final_acc)
 print("0", r_0)
 print("1", r_1)
 print("2", r_2)
 print("3", r_3)
-
+print("4", r_4)
