@@ -33,17 +33,6 @@ print('test_text shape:', test_text_data.shape)
 print('train_label shape:', train_label.shape)
 print('test_label shape:', test_label.shape)
 
-"""
-final_train_audio, final_train_text, final_train_label = process_train_data(train_audio_data, train_text_data, train_label)
-final_train_audio = np.array(final_train_audio)
-print('train_audio shape:', final_train_audio.shape)
-print('train_text shape:', final_train_text.shape)
-print('test_audio shape:', test_audio_data.shape)
-print('test_text shape:', test_text_data.shape)
-print('train_label shape:', final_train_label.shape)
-print('test_label shape:', test_label.shape)
-"""
-
 
 def weight_expand(x):
     return backend.expand_dims(x)
@@ -71,43 +60,28 @@ def data_normal(x):
 # Previous 3793, 513, 98
 frame_input = Input(shape=(513, 64))
 mask_frame_input = Masking(mask_value=0.)(frame_input)
-print('mask_frame_input shape: ', mask_frame_input.shape)
 frame_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25, name='LSTM_audio_1'))(mask_frame_input)
-#frame_l1 = BatchNormalization()(frame_l1)
-print('frame_l1 shape: ', frame_l1.shape)
 frame_weight = AttentionLayer()(frame_l1)
-#frame_weight = BatchNormalization()(frame_weight)
-print('frame_att shape: ', frame_weight.shape)
 frame_weight_exp = Lambda(weight_expand)(frame_weight)#
 frame_att = Lambda(weight_dot)([frame_l1, frame_weight_exp])#
 frame_att = Lambda(lambda x: backend.sum(x, axis=1))(frame_att)#
-print('frame_att shape: ', frame_att.shape)
 dropout_frame = Dropout(0.5)(frame_att)
 model_frame = Model(frame_input, dropout_frame)
 
 word_input = Input(shape=(98, 513, 64))
 mask_word_input = Masking(mask_value=0.)(word_input)
-print('mask_word_input shape: ', mask_word_input.shape)
 audio_input = TimeDistributed(model_frame)(mask_word_input)
-print('audio_input shape: ', audio_input.shape)
 audio_input = Masking(mask_value=0.)(audio_input)
 audio_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25, name='LSTM_audio_2'))(audio_input)
-#audio_l1 = BatchNormalization()(audio_l1)
-print('audio_l1 shape: ', audio_l1.shape)
 word_weight = AttentionLayer()(audio_l1)
-#word_weight = BatchNormalization()(word_weight)
-print('word_weight shape: ', word_weight.shape)
 word_weight_exp = Lambda(weight_expand)(word_weight)
 word_attention = Lambda(weight_dot)([audio_l1, word_weight_exp])
 word_att = Lambda(lambda x: backend.sum(x, axis=1))(word_attention)
-print('word_att shape: ', word_att.shape)
 dropout_word = Dropout(0.5)(word_att)
 
 audio_prediction = Dense(numclass, activation='softmax')(dropout_word)
 audio_model = Model(inputs=word_input, outputs=audio_prediction)
 inter_audio_hidden = Model(inputs=word_input, outputs=[word_attention, word_weight])
-#inter_audio_weight = Model(inputs=word_input, outputs=word_weight)
-
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
@@ -120,7 +94,6 @@ text_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25,
 text_l1 = BatchNormalization()(text_l1)
 text_weight = AttentionLayer()(text_l1)
 text_weight = BatchNormalization()(text_weight)#
-print('frame_att shape: ', text_weight.shape)
 text_weight_exp = Lambda(weight_expand)(text_weight)#
 text_attention = Lambda(weight_dot)([text_l1, text_weight_exp])#
 text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)#
@@ -138,14 +111,6 @@ text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['ac
 # Fusion Model
 text_f_input = Input(shape=(98, 200))
 audio_f_input = Input(shape=(98, 200))
-
-"""
-text_weight_input = Lambda(weight_expand)(text_weight_input)
-text_f_input = Lambda(weight_dot)([text_f_input, text_weight_input])
-
-audio_weight_input = Lambda(weight_expand)(audio_weight_input)
-audio_f_input = Lambda(weight_dot)([audio_f_input, audio_weight_input])
-"""
 
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 merge = Dropout(0.5)(merge)
@@ -193,27 +158,10 @@ activation2 = Activation('relu')(batch_nol2)
 d_drop2 = Dropout(0.6)(activation2)
 f_prediction = Dense(numclass, activation='softmax')(d_drop2)
 final_model = Model(inputs=[text_f_input, audio_f_input], outputs=f_prediction)
-#visualization = Model(inputs=[text_f_input, audio_f_input], outputs=merge)
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 final_inter_model = Model(inputs=[text_f_input, audio_f_input], outputs=merge_weight)
 
-"""
-# Merge Layer
-merge = concatenate([audio_att, text_att], name='merge')
-dropout_l1 = Dropout(0.5)(merge)
-
-final_prediction = Dense(4, activation='softmax')(dropout_l1)
-final_model = Model(inputs=[audio_input, text_input], outputs=final_prediction)
-
-adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-final_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-final_model.summary()
-
-print('Train...')
-#result = final_model.fit([train_audio_data, train_text_data], train_label, batch_size=batch_size, epochs=15, validation_data=([test_audio_data, test_text_data], test_label), verbose=1)
-#print(result.history)
-"""
 
 
 text_acc = 0
@@ -226,9 +174,7 @@ for i in range(25):
     if acc_t >= text_acc:
         text_acc = acc_t
         train_text_inter, train_text_weight = inter_text_hidden.predict(train_text_data, batch_size=batch_size)
-        #train_text_weight = inter_text_weight.predict(train_text_data, batch_size=batch_size)
         test_text_inter, test_text_weight = inter_text_hidden.predict(test_text_data, batch_size=batch_size)
-        #test_text_weight = inter_text_weight.predict(test_text_data, batch_size=batch_size)
 
 audio_acc = 0
 for i in range(50):
@@ -245,32 +191,9 @@ for i in range(50):
         train_audio_inter, train_audio_weight = inter_audio_hidden.predict_generator(data_generator_output(audio_path, train_audio_data, train_label,
                                                                                len(train_audio_data)),
                                                                 steps=len(train_audio_data))
-        #train_audio_weight = inter_audio_weight.predict_generator(data_generator_output(audio_path, train_audio_data, train_label, len(train_audio_data)), steps=len(train_audio_data))
         test_audio_inter, test_audio_weight = inter_audio_hidden.predict_generator(data_generator_output(audio_path, test_audio_data, test_label,
                                                                               len(test_audio_data)),
                                                                steps=len(test_audio_data))
-        #test_audio_weight = inter_audio_weight.predict_generator(data_generator_output(audio_path, test_audio_data, test_label, len(test_audio_data)), steps=len(test_audio_data))
-        """
-        if os.path.exists(model_path):
-            os.remove(model_path)
-        inter_audio_hidden.save(model_path)
-        """
-
-"""
-#output_result(test_text_weight, test_audio_weight, test_index)
-output_audio_model = load_model(model_path)
-train_audio_inter, train_audio_weight = output_audio_model.predict_generator(data_generator_output(audio_path, train_audio_data, train_label,
-                                                                                                   len(train_audio_data)),
-                                                                             steps=len(train_audio_data))
-test_audio_inter, test_audio_weight = output_audio_model.predict_generator(data_generator_output(audio_path, test_audio_data, test_label,
-                                                                                                 len(test_audio_data)),
-                                                                           steps=len(test_audio_data))
-"""
-
-#train_audio_weight = data_normal(train_audio_weight)
-#test_audio_weight = data_normal(test_audio_weight)
-#train_text_weight = data_normal(train_text_weight)
-#test_text_weight = data_normal(test_text_weight)
 
 
 
@@ -285,8 +208,6 @@ for i in range(epo):
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         test_fusion_weight = final_inter_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
-        #visualization_res = visualization.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
-        #output_result(visualization_res, test_index)
         result = np.argmax(result, axis=1)
 
 
@@ -299,4 +220,3 @@ print(r_2)
 print(r_3)
 print(r_4)
 
-output_result(test_text_weight, test_audio_weight, test_fusion_weight, test_index)

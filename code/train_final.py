@@ -1,6 +1,6 @@
 from __future__ import print_function
 from self_attention import Attention, Position_Embedding
-from load_ori_data import get_data, analyze_data, train_data_generation,data_generator,data_generator_output  #process_train_data
+from load_final_data import get_data, analyze_data, data_generator,data_generator_output  #process_train_data
 from keras.models import Model
 from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
     GlobalAveragePooling1D, Conv1D, GlobalMaxPooling1D, Lambda, TimeDistributed
@@ -44,12 +44,6 @@ def weight_average(inputs):
     y = inputs[1]
     return (x+y)/2
 
-
-def data_normal(x):
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x = min_max_scaler.fit_transform(x)
-    return x
-
 # Audio branch
 audio_input = Input(shape=(513, 64))
 audio_att = Attention(4,16)([audio_input,audio_input,audio_input])
@@ -62,7 +56,6 @@ model_frame = Model(audio_input, dropout_audio)
 
 word_input = Input(shape=(98, 513, 64))
 audio_input = TimeDistributed(model_frame)(word_input)
-#audio_input = TimeDistributed(model_frame)(word_input)
 word_att = Attention(4,16)([audio_input,audio_input,audio_input])
 word_att = GlobalAveragePooling1D()(word_att)
 word_weight_exp = Lambda(weight_expand)(word_att)
@@ -83,9 +76,9 @@ em_text = Position_Embedding()(em_text)
 text_weight = Attention(10,20)([em_text,em_text,em_text])
 text_weight = BatchNormalization()(text_weight)
 text_weight = GlobalAveragePooling1D()(text_weight)
-text_weight_exp = Lambda(weight_expand)(text_weight)#
-text_attention = Lambda(weight_dot)([em_text, text_weight_exp])#
-text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)#
+text_weight_exp = Lambda(weight_expand)(text_weight)
+text_attention = Lambda(weight_dot)([em_text, text_weight_exp])
+text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)
 dropout_text = Dropout(0.5)(text_att)
 text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
@@ -94,8 +87,8 @@ adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
 # Fusion Model
-text_f_input = Input(shape=(98,200))
-audio_f_input = Input(shape=(98,200 ))
+text_f_input = Input(shape=(98,200))#50，
+audio_f_input = Input(shape=(98,200))#，64
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 merge = Dropout(0.5)(merge)
 
@@ -131,11 +124,11 @@ dropout_4 = Dropout(0.7)(maxpool_4)
 
 final_merge = concatenate([dropout_1, dropout_2, dropout_3, dropout_4], name='final_merge')
 
-d_1 = Dense(200)(merge)
+d_1 = Dense(256)(merge)
 batch_nol1 = BatchNormalization()(d_1)
 activation1 = Activation('relu')(batch_nol1)
 d_drop1 = Dropout(0.5)(activation1)
-d_2 = Dense(64)(d_drop1)
+d_2 = Dense(128)(d_drop1)
 batch_nol2 = BatchNormalization()(d_2)
 activation2 = Activation('relu')(batch_nol2)
 d_drop2 = Dropout(0.5)(activation2)

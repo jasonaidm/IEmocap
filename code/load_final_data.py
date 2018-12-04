@@ -62,15 +62,6 @@ def get_mat_data(path):
     return res
 
 
-def get_hier_mat_data():
-    res = []
-    i = 0
-    while i < num:
-        res.append(i)
-        i += 1
-    return res
-
-
 def get_text_data(path, dic):
     f = open(path, 'r')
     res = []
@@ -181,22 +172,6 @@ def seperate_dataset(audio_data, text_data, label):
 
     return np.array(train_audio_data), train_text_data, train_label, np.array(
         test_audio_data), test_text_data, test_label
-def seperate_hier_dataset(audio_data, text_data, label):
-    train_text_data, train_audio_data, test_text_data, test_audio_data = [], [], [], []
-    train_label, test_label = [], []
-    i = 0
-    while i < len(audio_data):
-        if random.randint(0, 100) < 80:
-            train_audio_data.append(audio_data[i])
-            train_text_data.append(text_data[i])
-            train_label.append(label[i])
-        else:
-            test_audio_data.append(audio_data[i])
-            test_text_data.append(text_data[i])
-            test_label.append(label[i])
-        i += 1
-    return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label
-
 
 def analyze_data(test_label, result):
     r_0 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
@@ -221,28 +196,6 @@ def analyze_data(test_label, result):
     return r_0, r_1, r_2, r_3, r_4
 
 
-def train_data_generation(audio_data, text_data, label):
-    i = 0
-    r_audio, r_text, r_label = [], [], []
-    while i < len(audio_data):
-        if label[i] == 1:
-            if random.randint(0, 100) < 75:
-                r_audio.append(audio_data[i])
-                r_text.append(text_data[i])
-                r_label.append(label[i])
-        elif label[i] == 3:
-            if random.randint(0, 100) < 40:
-                r_audio.append(audio_data[i])
-                r_text.append(text_data[i])
-                r_label.append(label[i])
-        else:
-            r_audio.append(audio_data[i])
-            r_text.append(text_data[i])
-            r_label.append(label[i])
-        i += 1
-    return np.array(r_audio), r_text, r_label
-
-
 def data_generator(path, audio_data, audio_label, num):
     i = 0
     while 1:
@@ -260,24 +213,6 @@ def data_generator(path, audio_data, audio_label, num):
         res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
         yield (np.array(res), np.array(res_label))
 
-def output_result(result_text, result_audio, result_fusion, index):
-    if os.path.exists(visualization_text):
-        os.remove(visualization_text)
-    scio.savemat(visualization_text, {'visulization': result_text})
-    if os.path.exists(visualization_audio):
-        os.remove(visualization_audio)
-    scio.savemat(visualization_audio, {'visulization': result_audio})
-    if os.path.exists(visualization_fusion):
-        os.remove(visualization_fusion)
-    if result_fusion != []:
-        scio.savemat(visualization_fusion, {'visulization': result_fusion})
-    if os.path.exists(visualization_index):
-        os.remove(visualization_index)
-    f = open(visualization_index, 'a')
-    for i in range(len(index)):
-        f.write(str(index[i])+'\n')
-    f.close()
-
 def data_generator_output(path, audio_data, audio_label, num):
     i = 0
     while 1:
@@ -291,6 +226,13 @@ def data_generator_output(path, audio_data, audio_label, num):
         i += 1
         res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
         yield (np.array(res), np.array(res_label))
+def get_hier_mat_data():
+    res = []
+    i = 0
+    while i < num:
+        res.append(i)
+        i += 1
+    return res
 
 
 
@@ -298,13 +240,13 @@ def get_data():
     dic = get_dictionary(dic_path)
     embed_matrix = initial_embed(dic, embed_path)
     label = get_label(label_path)
-    audio_data = get_mat_data(audio_path)
+    audio_data = get_hier_mat_data()
     text_data = get_text_data(text_path, dic)
     train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label_o = seperate_dataset(
         audio_data, text_data, label)
     train_label = to_categorical(train_label,num_classes=numclass)
-    train_text_data = sequence.pad_sequences(train_text_data, maxlen=maxlen)
+    train_text_data = sequence.pad_sequences(train_text_data, padding='post', truncating='post', maxlen=maxlen)
     test_label = to_categorical(test_label_o, num_classes=numclass)
-    test_text_data = sequence.pad_sequences(test_text_data, maxlen=maxlen)
+    test_text_data = sequence.pad_sequences(test_text_data, padding='post', truncating='post', maxlen=maxlen)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
 
