@@ -78,9 +78,9 @@ print('frame_l1 shape: ', frame_l1.shape)
 frame_weight = AttentionLayer()(frame_l1)
 #frame_weight = BatchNormalization()(frame_weight)
 print('frame_att shape: ', frame_weight.shape)
-frame_weight_exp = Lambda(weight_expand)(frame_weight)
-frame_att = Lambda(weight_dot)([frame_l1, frame_weight_exp])
-frame_att = Lambda(lambda x: backend.sum(x, axis=1))(frame_att)
+frame_weight_exp = Lambda(weight_expand)(frame_weight)#
+frame_att = Lambda(weight_dot)([frame_l1, frame_weight_exp])#
+frame_att = Lambda(lambda x: backend.sum(x, axis=1))(frame_att)#
 print('frame_att shape: ', frame_att.shape)
 dropout_frame = Dropout(0.5)(frame_att)
 model_frame = Model(frame_input, dropout_frame)
@@ -106,7 +106,7 @@ dropout_word = Dropout(0.5)(word_att)
 audio_prediction = Dense(numclass, activation='softmax')(dropout_word)
 audio_model = Model(inputs=word_input, outputs=audio_prediction)
 inter_audio_hidden = Model(inputs=word_input, outputs=[word_attention, word_weight])
-inter_audio_weight = Model(inputs=word_input, outputs=word_weight)
+#inter_audio_weight = Model(inputs=word_input, outputs=word_weight)
 
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
@@ -119,11 +119,11 @@ mask_text_input = Masking(mask_value=0.)(em_text)
 text_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
 text_l1 = BatchNormalization()(text_l1)
 text_weight = AttentionLayer()(text_l1)
-text_weight = BatchNormalization()(text_weight)
+text_weight = BatchNormalization()(text_weight)#
 print('frame_att shape: ', text_weight.shape)
-text_weight_exp = Lambda(weight_expand)(text_weight)
-text_attention = Lambda(weight_dot)([text_l1, text_weight_exp])
-text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)
+text_weight_exp = Lambda(weight_expand)(text_weight)#
+text_attention = Lambda(weight_dot)([text_l1, text_weight_exp])#
+text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)#
 dropout_text = Dropout(0.5)(text_att)
 
 text_prediction = Dense(numclass, activation='softmax')(dropout_text)
@@ -154,7 +154,7 @@ print('merge shape: ', merge.shape)
 merge_weight = AttentionLayer()(merge)
 merge_weight_exp = Lambda(weight_expand)(merge_weight)
 merge = Lambda(weight_dot)([merge, merge_weight_exp])
-merge = BatchNormalization()(merge)
+merge = BatchNormalization()(merge)#
 
 
 cnn_1 = Conv1D(filters, 2, padding='valid', strides=1)(merge)
