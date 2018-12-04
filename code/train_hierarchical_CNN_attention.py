@@ -1,17 +1,15 @@
 from __future__ import print_function
 from load_attention_data import get_data, analyze_data
-from keras.models import Model, load_model
+from keras.models import Model
 from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, TimeDistributed
-from keras.layers import BatchNormalization, Activation, Conv1D, GlobalMaxPooling1D, Lambda, add
+from keras.layers import BatchNormalization, Activation, Conv1D, GlobalMaxPooling1D, Lambda
 from keras.optimizers import Adam
 from keras import backend
 from attention_model import AttentionLayer
-from load_attention_data import data_generator, data_generator_output, output_result
+from load_attention_data import data_generator, data_generator_output
 from sklearn.utils import shuffle
 from sklearn import preprocessing
-from keras.utils.np_utils import to_categorical
 import numpy as np
-import os
 
 max_features = 20000
 batch_size = 16
@@ -114,7 +112,6 @@ audio_f_input = Input(shape=(98, 200))
 
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 merge = Dropout(0.5)(merge)
-print('merge shape: ', merge.shape)
 
 merge_weight = AttentionLayer()(merge)
 merge_weight_exp = Lambda(weight_expand)(merge_weight)

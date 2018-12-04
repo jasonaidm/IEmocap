@@ -5,7 +5,6 @@ import numpy as np
 import random
 import string
 import scipy.io as scio
-import os
 
 dic_path = '/media/yeu/cdfd566c-2b64-486d-ac81-81c7dedfd5df/ACL_2018_entire/dictionary_new.txt'
 label_category = ['ang', 'exc', 'sad', 'fru', 'hap', 'neu']
@@ -145,26 +144,6 @@ def data_generator_output(path, audio_data, audio_label, num):
         i += 1
         res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=maxlen)
         yield (np.array(res), np.array(res_label))
-
-
-def output_result(result_text, result_audio, result_fusion, index):
-    if os.path.exists(visualization_text):
-        os.remove(visualization_text)
-    scio.savemat(visualization_text, {'visulization': result_text})
-    if os.path.exists(visualization_audio):
-        os.remove(visualization_audio)
-    scio.savemat(visualization_audio, {'visulization': result_audio})
-    if os.path.exists(visualization_fusion):
-        os.remove(visualization_fusion)
-    if result_fusion != []:
-        scio.savemat(visualization_fusion, {'visulization': result_fusion})
-    if os.path.exists(visualization_index):
-        os.remove(visualization_index)
-    f = open(visualization_index, 'a')
-    for i in range(len(index)):
-        f.write(str(index[i])+'\n')
-    f.close()
-
 
 def get_data():
     dic = get_dictionary(dic_path)
