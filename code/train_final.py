@@ -2,14 +2,14 @@ from __future__ import print_function
 from self_attention import Attention, Position_Embedding
 from load_final_data import get_data, analyze_data, data_generator,data_generator_output  #process_train_data
 from keras.models import Model
-from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, \
+from keras.layers import Dense, Dropout, Input, Masking, Embedding, concatenate, \
     GlobalAveragePooling1D, Conv1D, GlobalMaxPooling1D, Lambda, TimeDistributed
 from keras.layers import BatchNormalization, Activation
 from keras.optimizers import Adam
 import numpy as np
 from keras import backend
 from sklearn.utils import shuffle
-from sklearn import preprocessing
+from attention_model import AttentionLayer
 
 max_features = 20000
 batch_size = 16
@@ -17,7 +17,8 @@ epo = 100
 filters = 128
 flag = 0.60
 numclass = 5
-audio_path = r'E:/Yue/Entire Data/ACL_entire_2018/Word_Mat_New_1/'
+audio_path = r'E:\\Yue\\Entire Data\\ACL_2018_entire\\Word_Mat_New_1\\'
+
 # loading data
 print('Loading data...')
 train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic = get_data()
@@ -48,24 +49,25 @@ def weight_average(inputs):
 audio_input = Input(shape=(513, 64))
 audio_att = Attention(4,16)([audio_input,audio_input,audio_input])
 audio_att = GlobalAveragePooling1D()(audio_att)
-frame_weight_exp = Lambda(weight_expand)(audio_att)
-frame_att = Lambda(weight_dot)([audio_input, frame_weight_exp])#
-frame_att = Lambda(lambda x: backend.sum(x, axis=1))(frame_att)#
-dropout_audio = Dropout(0.5)(frame_att)
+#frame_weight_exp = Lambda(weight_expand)(audio_att)
+#frame_att = Lambda(weight_dot)([audio_input, frame_weight_exp])# ?,531,64 ?,531,1
+#frame_att = Lambda(lambda x: backend.sum(x, axis=1))(frame_att)#
+dropout_audio = Dropout(0.5)(audio_att)
 model_frame = Model(audio_input, dropout_audio)
 
 word_input = Input(shape=(98, 513, 64))
+mask_word_input = Masking(mask_value=0.)(word_input)
 audio_input = TimeDistributed(model_frame)(word_input)
 word_att = Attention(4,16)([audio_input,audio_input,audio_input])
 word_att = GlobalAveragePooling1D()(word_att)
-word_weight_exp = Lambda(weight_expand)(word_att)
-word_attention = Lambda(weight_dot)([word_input, word_weight_exp])
-word_att = Lambda(lambda x: backend.sum(x, axis=1))(word_attention)
+#word_weight_exp = Lambda(weight_expand)(word_att) #,64,1  ,64
+#word_attention = Lambda(weight_dot)([word_input, word_weight_exp])#,98,513,64 ,64,1
+#word_att1 = Lambda(lambda x: backend.sum(x, axis=1))(word_attention)
 dropout_word = Dropout(0.5)(word_att)
 
-audio_prediction = Dense(5, activation='softmax')(dropout_audio)
+audio_prediction = Dense(5, activation='softmax')(dropout_word)
 audio_model = Model(inputs=word_input, outputs=audio_prediction)
-inter_audio_model = Model(inputs=word_input, outputs=[word_attention, word_att])
+inter_audio_model = Model(inputs=word_input, outputs=[word_att])
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
@@ -76,13 +78,13 @@ em_text = Position_Embedding()(em_text)
 text_weight = Attention(10,20)([em_text,em_text,em_text])
 text_weight = BatchNormalization()(text_weight)
 text_weight = GlobalAveragePooling1D()(text_weight)
-text_weight_exp = Lambda(weight_expand)(text_weight)
-text_attention = Lambda(weight_dot)([em_text, text_weight_exp])
-text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)
-dropout_text = Dropout(0.5)(text_att)
+#text_weight_exp = Lambda(weight_expand)(text_weight)
+#text_attention = Lambda(weight_dot)([em_text, text_weight_exp])
+#text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)
+dropout_text = Dropout(0.5)(text_weight)
 text_prediction = Dense(5, activation='softmax')(dropout_text)
 text_model = Model(inputs=text_input, outputs=text_prediction)
-inter_text_model = Model(inputs=text_input, outputs=[text_att,text_weight])
+inter_text_model = Model(inputs=text_input, outputs=[text_weight])
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
@@ -91,13 +93,17 @@ text_f_input = Input(shape=(98,200))#50，
 audio_f_input = Input(shape=(98,200))#，64
 merge = concatenate([text_f_input, audio_f_input], name='merge')
 merge = Dropout(0.5)(merge)
-
+'''
 merge_weight = Attention(10,20)([merge,merge,merge])
-merge_weight = GlobalAveragePooling1D()(merge_weight)
+merge = GlobalAveragePooling1D()(merge_weight)
+merge_weight_exp = Lambda(weight_expand)(merge_weight)
+#merge = Lambda(weight_dot)([merge, merge_weight_exp])
+merge = BatchNormalization()(merge_weight_exp)#
+'''
+merge_weight = AttentionLayer()(merge)
 merge_weight_exp = Lambda(weight_expand)(merge_weight)
 merge = Lambda(weight_dot)([merge, merge_weight_exp])
-merge = BatchNormalization()(merge)#
-
+merge = BatchNormalization()(merge)
 cnn_1 = Conv1D(filters, 2, padding='valid', strides=1)(merge)
 batchnol1 = BatchNormalization()(cnn_1)
 activation1 = Activation('relu')(batchnol1)
@@ -141,7 +147,7 @@ final_inter_model = Model(inputs=[text_f_input, audio_f_input], outputs=merge_we
 text_acc = 0
 train_text_inter= None
 test_text_inter = None
-for i in range(50):
+for i in range(0):
     print('text branch, epoch: ', str(i))
     text_model.fit(train_text_data, train_label, batch_size=batch_size, epochs=1, verbose=1)
     loss_t, acc_t = text_model.evaluate(test_text_data, test_label, batch_size=batch_size, verbose=0)
@@ -149,13 +155,15 @@ for i in range(50):
     print('loss_t', loss_t, ' ', 'acc_t', acc_t)
     if acc_t >= text_acc:
         text_acc = acc_t
-        train_text_inter, train_text_weight = inter_text_model.predict(train_text_data, batch_size=batch_size)
-        test_text_inter, test_text_weight = inter_text_model.predict(test_text_data, batch_size=batch_size)
+        train_text_inter = inter_text_model.predict(train_text_data, batch_size=batch_size)
+        test_text_inter = inter_text_model.predict(test_text_data, batch_size=batch_size)
+text_model.save_weights(r'E:\Yue\Code\ACL_entire\text_model\\text_model.h5')
+inter_text_model.save_weights(r'E:\Yue\Code\ACL_entire\text_model\\inter_text_model.h5')
 
 train_audio_inter = None
 test_audio_inter = None
 audio_acc = 0
-for i in range(50):
+for i in range(5):
     print('audio branch, epoch: ', str(i))
     train_d, train_l = shuffle(train_audio_data, train_label)
     audio_model.fit_generator(data_generator(audio_path, train_d, train_l, len(train_d)),
@@ -164,24 +172,30 @@ for i in range(50):
                                                    steps=len(test_audio_data)/4)
     print('epoch: ', str(i))
     print('loss_a', loss_a, ' ', 'acc_a', acc_a)
+    audio_model.save_weights(r'E:\Yue\Code\ACL_entire\audio_model\audio_model.h5')
+    inter_audio_model.save_weights(r'E:\Yue\Code\ACL_entire\audio_model\inter_audio_model.h5')
     if acc_a >= audio_acc and acc_a >= flag:
+        audio_model.save_weights(r'E:\Yue\Code\ACL_entire\audio_model\audio_model1.h5')
+        inter_audio_model.save_weights(r'E:\Yue\Code\ACL_entire\audio_model\inter_audio_model1.h5')
         audio_acc = acc_a
-        train_audio_inter, train_audio_weight = inter_audio_model.predict_generator(data_generator_output(audio_path, train_audio_data, train_label,
+        train_audio_inter= inter_audio_model.predict_generator(data_generator_output(audio_path, train_audio_data, train_label,
                                                                                len(train_audio_data)),
                                                                 steps=len(train_audio_data))
-        test_audio_inter, test_audio_weight = inter_audio_model.predict_generator(data_generator_output(audio_path, test_audio_data, test_label,
+        test_audio_inter= inter_audio_model.predict_generator(data_generator_output(audio_path, test_audio_data, test_label,
                                                                               len(test_audio_data)),
                                                                steps=len(test_audio_data))
 
 final_acc = 0
 result = None
-for i in range(100):
+for i in range(0):
     print('fusion branch, epoch: ', str(i))
     final_model.fit([train_text_inter, train_audio_inter], train_label, batch_size=batch_size, epochs=1)
     loss_f, acc_f = final_model.evaluate([test_text_inter, test_audio_inter], test_label, batch_size=batch_size, verbose=0)
     print('epoch: ', str(i))
     print('loss_f', loss_f, ' ', 'acc_f', acc_f)
     if acc_f >= final_acc:
+        final_model.save_weights(r'E:\Yue\Code\ACL_entire\final_model\final_model.h5')
+        final_inter_model.save_weights(r'E:\Yue\Code\ACL_entire\final_model\final_inter_model.h5')
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         test_fusion_weight = final_inter_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)

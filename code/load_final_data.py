@@ -5,14 +5,13 @@ import numpy as np
 import random
 import string
 import scipy.io as scio
-import os
+
 label_category = ['ang', 'exc', 'sad', 'fru', 'hap', 'neu']
 dic_path = r'E:/Yue/Entire Data/ACL_2018_entire/dictionary_new.txt'
 label_path = r'E:/Yue/Entire Data/ACL_2018_entire/label_output_new.txt'
 audio_path = r'E:/Yue/Entire Data/ACL_2018_entire/Word_Mat_New_1/'
 text_path = r'E:/Yue/Entire Data/ACL_2018_entire/text_output_new.txt'
 embed_path = r'E:/Yue/Entire Data/ACL_2018_entire/'
-
 visualization_text = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_text.mat'
 visualization_audio = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_audio.mat'
 visualization_fusion = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_fusion.mat'
@@ -20,6 +19,7 @@ visualization_index = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attenti
 maxlen = 98
 numclass = 5
 num = 7204
+
 
 def get_label(path):
     f = open(path, 'r')
@@ -173,6 +173,7 @@ def seperate_dataset(audio_data, text_data, label):
     return np.array(train_audio_data), train_text_data, train_label, np.array(
         test_audio_data), test_text_data, test_label
 
+
 def analyze_data(test_label, result):
     r_0 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
     r_1 = {'0': 0, '1': 0, '2': 0, '3': 0, '4': 0}
@@ -213,6 +214,7 @@ def data_generator(path, audio_data, audio_label, num):
         res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
         yield (np.array(res), np.array(res_label))
 
+
 def data_generator_output(path, audio_data, audio_label, num):
     i = 0
     while 1:
@@ -226,6 +228,8 @@ def data_generator_output(path, audio_data, audio_label, num):
         i += 1
         res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
         yield (np.array(res), np.array(res_label))
+
+
 def get_hier_mat_data():
     res = []
     i = 0
@@ -233,7 +237,6 @@ def get_hier_mat_data():
         res.append(i)
         i += 1
     return res
-
 
 
 def get_data():
@@ -244,9 +247,8 @@ def get_data():
     text_data = get_text_data(text_path, dic)
     train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label_o = seperate_dataset(
         audio_data, text_data, label)
-    train_label = to_categorical(train_label,num_classes=numclass)
+    train_label = to_categorical(train_label, num_classes=numclass)
     train_text_data = sequence.pad_sequences(train_text_data, padding='post', truncating='post', maxlen=maxlen)
     test_label = to_categorical(test_label_o, num_classes=numclass)
     test_text_data = sequence.pad_sequences(test_text_data, padding='post', truncating='post', maxlen=maxlen)
     return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label, test_label_o, embed_matrix, dic
-
