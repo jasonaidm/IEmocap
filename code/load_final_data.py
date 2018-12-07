@@ -12,10 +12,6 @@ label_path = r'E:/Yue/Entire Data/ACL_2018_entire/label_output_new.txt'
 audio_path = r'E:/Yue/Entire Data/ACL_2018_entire/Word_Mat_New_1/'
 text_path = r'E:/Yue/Entire Data/ACL_2018_entire/text_output_new.txt'
 embed_path = r'E:/Yue/Entire Data/ACL_2018_entire/'
-visualization_text = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_text.mat'
-visualization_audio = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_audio.mat'
-visualization_fusion = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_fusion.mat'
-visualization_index = r'E:/Yue/Entire Data/ACL_2018_entire/Visualization/Attention_4_Category/visualization_label.txt'
 maxlen = 98
 numclass = 5
 num = 7204
@@ -55,7 +51,7 @@ def get_mat_data(path):
     while i < 7204:
         tmp = scio.loadmat(path + str(i) + ".mat")
         tmp = tmp['z1']
-        tmp = sequence.pad_sequences(tmp, padding='post', truncating='post', dtype='float32', maxlen=2250)
+        tmp = sequence.pad_sequences(tmp, padding='post', truncating='post', dtype='float32', maxlen=maxlen)
         tmp = tmp.transpose()
         res.append(tmp)
         i += 1
@@ -170,8 +166,7 @@ def seperate_dataset(audio_data, text_data, label):
             test_label.append(neu_label[neu_i])
         neu_i += 1
 
-    return np.array(train_audio_data), train_text_data, train_label, np.array(
-        test_audio_data), test_text_data, test_label
+    return train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label
 
 
 def analyze_data(test_label, result):
@@ -211,7 +206,7 @@ def data_generator(path, audio_data, audio_label, num):
             res_label.append(audio_label[i])
             j += 1
             i += 1
-        res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
+        res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=maxlen)
         yield (np.array(res), np.array(res_label))
 
 
@@ -226,9 +221,8 @@ def data_generator_output(path, audio_data, audio_label, num):
         res.append(tmp)
         res_label.append(audio_label[i])
         i += 1
-        res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=98)
+        res = sequence.pad_sequences(res, padding='post', truncating='post', dtype='float32', maxlen=maxlen)
         yield (np.array(res), np.array(res_label))
-
 
 def get_hier_mat_data():
     res = []
@@ -237,13 +231,12 @@ def get_hier_mat_data():
         res.append(i)
         i += 1
     return res
-
-
 def get_data():
     dic = get_dictionary(dic_path)
     embed_matrix = initial_embed(dic, embed_path)
     label = get_label(label_path)
     audio_data = get_hier_mat_data()
+    #audio_data = get_mat_data(audio_path)
     text_data = get_text_data(text_path, dic)
     train_audio_data, train_text_data, train_label, test_audio_data, test_text_data, test_label_o = seperate_dataset(
         audio_data, text_data, label)

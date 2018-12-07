@@ -1,4 +1,6 @@
 from __future__ import print_function
+
+import visualization
 from load_attention_data import get_data, analyze_data, train_data_generation  #process_train_data
 from keras.models import Model
 from keras.layers import Dense, Dropout, Input, LSTM, Bidirectional, Masking, Embedding, concatenate, TimeDistributed
@@ -247,7 +249,7 @@ for i in range(1):
     if acc_f >= final_acc:
         final_acc = acc_f
         result = final_model.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
-        #visualization_res = visualization.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
+        visualization_res = visualization.predict([test_text_inter, test_audio_inter], batch_size=batch_size)
         #output_result(visualization_res, test_index)
         result = np.argmax(result, axis=1)
 

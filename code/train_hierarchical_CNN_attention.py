@@ -53,6 +53,26 @@ def data_normal(x):
     x = min_max_scaler.fit_transform(x)
     return x
 
+# Text Branch
+text_input = Input(shape=(98,))
+em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
+mask_text_input = Masking(mask_value=0.)(em_text)
+text_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
+text_l1 = BatchNormalization()(text_l1)
+text_weight = AttentionLayer()(text_l1)
+text_weight = BatchNormalization()(text_weight)#
+text_weight_exp = Lambda(weight_expand)(text_weight)#
+text_attention = Lambda(weight_dot)([text_l1, text_weight_exp])#
+text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)#
+dropout_text = Dropout(0.5)(text_att)
+
+text_prediction = Dense(numclass, activation='softmax')(dropout_text)
+text_model = Model(inputs=text_input, outputs=text_prediction)
+inter_text_hidden = Model(inputs=text_input, outputs=[text_attention, text_weight])
+inter_text_weight = Model(inputs=text_input, outputs=text_weight)
+
+adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
+text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
 
 # Audio branch
 # Previous 3793, 513, 98
@@ -82,29 +102,6 @@ audio_model = Model(inputs=word_input, outputs=audio_prediction)
 inter_audio_hidden = Model(inputs=word_input, outputs=[word_attention, word_weight])
 adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 audio_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-
-
-# Text Branch
-text_input = Input(shape=(98,))
-em_text = Embedding(len(dic) + 1, 200, weights=[embed_matrix], trainable=True)(text_input)
-mask_text_input = Masking(mask_value=0.)(em_text)
-text_l1 = Bidirectional(LSTM(100, return_sequences=True, recurrent_dropout=0.25, name='LSTM_text'))(mask_text_input)
-text_l1 = BatchNormalization()(text_l1)
-text_weight = AttentionLayer()(text_l1)
-text_weight = BatchNormalization()(text_weight)#
-text_weight_exp = Lambda(weight_expand)(text_weight)#
-text_attention = Lambda(weight_dot)([text_l1, text_weight_exp])#
-text_att = Lambda(lambda x: backend.sum(x, axis=1))(text_attention)#
-dropout_text = Dropout(0.5)(text_att)
-
-text_prediction = Dense(numclass, activation='softmax')(dropout_text)
-text_model = Model(inputs=text_input, outputs=text_prediction)
-inter_text_hidden = Model(inputs=text_input, outputs=[text_attention, text_weight])
-inter_text_weight = Model(inputs=text_input, outputs=text_weight)
-
-adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
-text_model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-
 
 # Fusion Model
 text_f_input = Input(shape=(98, 200))
